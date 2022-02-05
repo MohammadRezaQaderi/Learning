@@ -1,0 +1,1 @@
+slice in go like pointer that pointed to array
