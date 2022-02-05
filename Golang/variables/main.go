@@ -29,4 +29,9 @@ func main() {
 	*p = 10
 	fmt.Println(a)
 
+	// assignment
+	j, k := 12, 15
+	fmt.Println(j)
+	fmt.Println(k)
+
 }
