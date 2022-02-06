@@ -23,6 +23,17 @@ func (s *Student) IncreaseAge(inc int) {
 func (s *Student) Hello(s1 Student) string {
 	return fmt.Sprintf("Hello %s, I am %s %s", s.Name, s1.Name, s1.Family)
 }
+
+//New is popular pattern to create types (constructor)
+
+func New(name, family string, age int) Student {
+	return Student{
+		Name:   name,
+		Family: family,
+		age:    age,
+	}
+
+}
 func main() {
 	s := &Student{
 		Name:   "Muhmad",
