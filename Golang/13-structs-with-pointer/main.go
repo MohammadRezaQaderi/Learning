@@ -51,7 +51,7 @@ func main() {
 
 	fmt.Println(p)
 
-	// just want to know this is ok and implemented
+	// just want to know this is ok and implementedcd
 	var _ fmt.Stringer = p
 	var _ fmt.Stringer = &p
 
