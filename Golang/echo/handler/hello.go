@@ -35,7 +35,7 @@ func (h Hello) Post(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
+	log.Println(req.Name)
 	if req.Count == nil {
 		log.Println("There is no Count")
 	} else {
