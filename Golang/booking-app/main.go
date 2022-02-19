@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Learning/Golang/booking-app/helper"
+	"time"
 )
 
 const conferenceTickets int = 50
@@ -28,8 +29,8 @@ func main() {
 		firstName, lastName, email, userTickets := getUserInput()
 		isValidName, isValidEmail, isValidTicketNumber := helper.ValidateUserInput(firstName, lastName, email, userTickets, RemainingTickets)
 		if isValidName && isValidEmail && isValidTicketNumber {
-
 			bookTicket(userTickets, firstName, lastName, email)
+			go sendTicket(userTickets, firstName, lastName, email)
 			firstNames := getFirstName()
 			fmt.Printf("These are all our booking: %v\n", firstNames)
 			if RemainingTickets == 0 {
@@ -91,4 +92,12 @@ func bookTicket(userTickets uint, firstName, lastName, email string) {
 
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will recive a cofirmation email at %v\n", firstName, lastName, userTickets, email)
 	fmt.Printf("%v tickets remaining for %v\n", RemainingTickets, conferenceName)
+}
+
+func sendTicket(userTickets uint, firstName, lastName, email string) {
+	time.Sleep(10 * time.Second)
+	var ticket = fmt.Sprintf("%v tickets for %v %v", userTickets, firstName, lastName)
+	fmt.Println("############")
+	fmt.Printf("Sending ticket:\n %v\n to email address%v\n", ticket, email)
+	fmt.Println("############")
 }
