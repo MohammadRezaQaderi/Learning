@@ -19,7 +19,7 @@ func main() {
 
 	e.GET("/hello/:username", h.User)
 
-	if err := e.Start("127.0.0.1:1378"); err != nil {
+	if err := e.Start("0.0.0.0:1378"); err != nil {
 		log.Fatal(err)
 	}
 }

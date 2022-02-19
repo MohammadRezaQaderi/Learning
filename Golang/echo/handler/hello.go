@@ -35,7 +35,7 @@ func (h Hello) Post(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	log.Println(req.Name)
+	log.Println(req)
 	if req.Count == nil {
 		log.Println("There is no Count")
 	} else {
@@ -43,5 +43,5 @@ func (h Hello) Post(c echo.Context) error {
 	}
 
 	// nolint: wrapcheck
-	return c.String(http.StatusOK, fmt.Sprintf("Hello to %s from %s", req.Name, h.From))
+	return c.String(http.StatusOK, fmt.Sprintf("Hello to %v from %s", req, h.From))
 }
