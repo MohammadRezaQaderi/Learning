@@ -1,9 +1,13 @@
-const Header = () => {
+const Header = (props) => {
   return (
     <header>
-        <h1>Task Traker</h1>
+        <h1>{props.title}</h1>
     </header>
   )
+}
+
+Header.defaultProps = {
+    title: 'Task Manager',
 }
 
 export default Header
