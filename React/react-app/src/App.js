@@ -1,11 +1,29 @@
 import Header from "./components/Header";
+import Tasks from "./components/Tasks";
+import { useState } from "react"
+
 // import React from "react";
 function App() {
+  const [tasks, setTasks] = useState([
+    {
+        id: 1,
+        text: "ssss",
+        day: "fev ,",
+        reminder: true,
+    },
+    {
+        id: 2,
+        text: "dddd",
+        day: "much ,",
+        reminder: true,
+    },
+  ])
   return (
-    <div className="App">
-      <Header title = "Task Manager"/>
-    </div>
-  );
+      <div className="App">
+        <Header />
+        <Tasks tasks={tasks}/>
+      </div>
+    );
 }
 
 // class App extends React.Component{
