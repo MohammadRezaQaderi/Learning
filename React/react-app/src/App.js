@@ -20,7 +20,6 @@ function App() {
   const fetchTasks = async () => {
     const res = await fetch ('http://localhost:5000/tasks')
     const data = await res.json()
-    console.log(data)
     return data
   }
   
@@ -29,20 +28,31 @@ function App() {
     await fetch(`http://localhost:5000/tasks/${id}`, {method: 'DELETE'})
     setTasks(tasks.filter((task) => task.id !== id))
   }
-  
+
+  // Add tasks
+  const addTask = async (task) =>{
+    const res = await fetch(`http://localhost:5000/tasks/`, 
+    {
+      method: 'POST',
+      headers:{
+        'Content-type': 'application/json'
+      },
+      body:JSON.stringify(task)
+    })
+    const data = await res.json()
+    setTasks([...tasks,data])
+    // const id = Math.floor(Math.random()*555)+27
+    // //make new task
+    // const newTask = {id, ...task}
+    // // added to previous tasks
+    // setTasks([...tasks, newTask]) 
+  }
+
   // Toggle the Reminder
   const toggleReminder = (id) => {
     setTasks(tasks.map((task) => task.id === id ? {...task, reminder: !task.reminder} : task))
   }
 
-  // Add tasks
-  const addTask = (task) =>{
-    const id = Math.floor(Math.random()*555)+27
-    //make new task
-    const newTask = {id, ...task}
-    // added to previous tasks
-    setTasks([...tasks, newTask]) 
-  }
 
   return (
       <div className="App">
