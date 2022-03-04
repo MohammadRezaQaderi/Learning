@@ -2,6 +2,7 @@ import Header from "./components/Header";
 import Tasks from "./components/Tasks";
 import AddTask from "./components/AddTask";
 import Footer from "./components/Footer";
+import About from "./components/About";
 import { useState, useEffect } from "react"
 
 // import React from "react";
