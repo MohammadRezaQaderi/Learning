@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 const Header = ({title}) => {
   return (
     <header>
-        <h1 style={headerstyle}>{title}</h1>
+        <h1 >{title}</h1>
     </header>
   )
 }
@@ -15,8 +15,9 @@ Header.prototype ={
     title: PropTypes.string,
 }
 
-const headerstyle = {
-    color: 'red',
-    backgroundColor: "black",
-}
+// ccs in Js
+// const headesrstyle = {
+//     color: 'red',
+//     backgroundColor: "black",
+// }
 export default Header
