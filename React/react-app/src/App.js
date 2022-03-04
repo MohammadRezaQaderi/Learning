@@ -25,7 +25,8 @@ function App() {
   }
   
   // delete the UI form for the Tasks
-  const deleteTask = (id) => {
+  const deleteTask = async (id) => {
+    await fetch(`http://localhost:5000/tasks/${id}`, {method: 'DELETE'})
     setTasks(tasks.filter((task) => task.id !== id))
   }
   
