@@ -18,13 +18,18 @@ function App() {
         reminder: true,
     },
   ])
+  // delete the UI form for the Tasks
   const deleteTask = (id) => {
-    console.log('deleted ', id);
+    setTasks(tasks.filter((task) => task.id !== id))
+  }
+  // Toggle the Reminder
+  const toggleReminder = (id) => {
+    setTasks(tasks.map((task) => task.id === id ? {...task, reminder: !task.reminder} : task))
   }
   return (
       <div className="App">
         <Header />
-        <Tasks tasks={tasks} onDelete = {deleteTask}/>
+        {tasks.length > 0 ? <Tasks tasks={tasks} onDelete = {deleteTask} onToggle = {toggleReminder}/> : "There is no Task"}
       </div>
     );
 }
