@@ -1,25 +1,28 @@
 import Header from "./components/Header";
 import Tasks from "./components/Tasks";
 import AddTask from "./components/AddTask";
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 // import React from "react";
 function App() {
   const [showAddTask, setShowAddTask] = useState(false)
-  const [tasks, setTasks] = useState([
-    {
-        id: 1,
-        text: "ssss",
-        day: "fev ,",
-        reminder: true,
-    },
-    {
-        id: 2,
-        text: "dddd",
-        day: "much ,",
-        reminder: true,
-    },
-  ])
+  const [tasks, setTasks] = useState([])
+  
+  useEffect(()=>{
+    const getTasks = async () => {
+      const tasksFromServer = await fetchTasks()
+      setTasks(tasksFromServer)
+    }
+    getTasks()
+  }, [])
+  
+  // Fetch tasks
+  const fetchTasks = async () => {
+    const res = await fetch ('http://localhost:5000/tasks')
+    const data = await res.json()
+    console.log(data)
+    return data
+  }
   
   // delete the UI form for the Tasks
   const deleteTask = (id) => {
