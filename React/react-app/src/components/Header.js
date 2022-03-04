@@ -1,8 +1,13 @@
 import PropTypes from 'prop-types'
+import Button from './Button.js'
 const Header = ({title}) => {
+    const onClick =  () =>{
+        
+    }
   return (
-    <header>
+    <header className='header'>
         <h1 >{title}</h1>
+        <Button onClick={onClick} />
     </header>
   )
 }
@@ -12,7 +17,7 @@ Header.defaultProps = {
 }
 
 Header.prototype ={
-    title: PropTypes.string,
+    title: PropTypes.string.isRequired,
 }
 
 // ccs in Js
