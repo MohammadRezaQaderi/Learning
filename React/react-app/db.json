@@ -1,22 +1,10 @@
 {
   "tasks": [
     {
-      "text": "تمرین اول بیو انفورماتیک",
-      "day": "12:00 PM",
+      "text": "کلاس دوم سیستم عامل",
+      "day": "",
       "reminder": true,
       "id": 1
-    },
-    {
-      "text": "کلاس دوم و سوم منطقی ",
-      "day": "6:00 PM",
-      "reminder": true,
-      "id": 2
-    },
-    {
-      "text": "یک تمرین روی letcode و quera",
-      "day": "12:00 PM",
-      "reminder": true,
-      "id": 3
     }
   ]
 }
