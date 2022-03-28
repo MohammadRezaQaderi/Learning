@@ -1,0 +1,11 @@
+Nosql database is the likly to not only sql (not infront of Sql).
+	types {
+		Document db =>  store data in documents similar to JSON (JavaScript Object Notation) objects. Each document contains pairs of fields and values. The values can typically be a variety of types including things like strings, numbers, booleans, arrays, or objects.
+		Key-value db => are a simpler type of database where each item contains keys and values.
+		Wide-column db => stores store data in tables, rows, and dynamic columns.
+		Graph db => store data in nodes and edges. Nodes typically store information about people, places, and things, while edges store information about the relationships between the nodes.
+	}
+
+	difference of RDBMS(relational data base management system) Vs. NoSQL
+		in RDBMS we should to seprate the data to the tables that have a relation with each other, that means when we need the data we have to join some tables and it's may take more time when we have many query.
+		in Nosql we have all the information in one index table.(we can have relation in here)
