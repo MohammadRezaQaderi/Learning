@@ -2,8 +2,8 @@ import base64
 import pandas as pd
 from elasticsearch import Elasticsearch
 import cherrypy
-import re
-
+from walrus import *
+import uuid
 
 # The Defualt Value for DataBase
 defualt_schema = {
@@ -65,14 +65,17 @@ def password_format_check(passwd):
         return val,''
     else:
       return val, message
-
+def set_token_redis(member_id, rd):
+  return
+def get_token_redis(member_id):
+  return
 
 # Class of Profiles that Can Authentication and Dashboard API and coonect to DB
 class Profile(object):
     
     # DashBoards
     @cherrypy.expose
-    def index(self):
+    def profile(self):
       return "Hello here we have the dashbords"
     
     # login for user with username and password
@@ -88,8 +91,11 @@ class Profile(object):
       }
       res = es.search(index='toobors-profile', body=query_body)  
       db_password = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]), axis=1)['_source']['password']
+      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
       if db_password == encode_password:
-        return f'You are Loged in {username}'
+        token = uuid.uuid4().hex
+        hash1[token] = id
+        return f'You are Loged in {username} with id {id} and token of {token}'
       else:
         return f'Excuse me its not correct Password for {username}'
 
@@ -127,30 +133,35 @@ class Profile(object):
         "scores": defualt_schema['scores']
       }
       es.index(index='toobors-profile', document=insert_query_body)
-      return f'Congregation your account is make, you can login by {username} username'
+      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      token = uuid.uuid4().hex
+      hash1[token] = id
+      return f'Congregation your account is make, you can login by {username} username with id of {id} and token of {token}'
 
     # Logout
     @cherrypy.expose
-    def logout(self, username):
+    def logout(self, token, id):
+      del hash1[token]
       return 'you are loged out'
 
     # change password
     @cherrypy.expose
-    def change_password(self, username, password, new_password):
+    def change_password(self, token, id, new_password):
       return 'your password was changed'
     
     # activate the team by useing the username
     @cherrypy.expose
-    def switch_on_team(self, username):
-      query_body = {
-       'query': {
-          'match':{
-            'username' : username
-          }
-        }
-      }
-      res = es.search(index='toobors-profile', body=query_body)
-      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+    def switch_on_team(self, token):
+      # query_body = {
+      #  'query': {
+      #     'match':{
+      #       'username' : username
+      #     }
+      #   }
+      # }
+      # res = es.search(index='toobors-profile', body=query_body)
+      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      # id = hash1[token]
       active_query_body = {
          "script" : {
               "source": "ctx._source.isActivate = params.isActivate",
@@ -161,20 +172,21 @@ class Profile(object):
         }
       }
       result = es.update(index='toobors-profile', id=id, body=active_query_body) 
-      return f"the team is Activated {username}"
+      return f"the team is Activated {id}"
 
     #  deactivate team by using the username
     @cherrypy.expose
-    def switch_off_team(self, username):
-      query_body = {
-       'query': {
-          'match':{
-            'username' : username
-          }
-        }
-      }
-      res = es.search(index='toobors-profile', body=query_body)
-      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+    def switch_off_team(self, token, id):
+      # query_body = {
+      #  'query': {
+      #     'match':{
+      #       'username' : username
+      #     }
+      #   }
+      # }
+      # res = es.search(index='toobors-profile', body=query_body)
+      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      # id = hash1[token]
       deactive_query_body = {
          "script" : {
               "source": "ctx._source.isActivate = params.isActivate",
@@ -185,22 +197,23 @@ class Profile(object):
         }
       }
       result = es.update(index='toobors-profile', id=id, body=deactive_query_body) 
-      return f"the team is Deactivate {username}"
+      return f"the team is Deactivate {id}"
 
     # Add the Users To Teams by get the username and set the email, name, address and number
     @cherrypy.expose
-    def add_user(self, username, email, name, address, number):
+    def add_user(self, token, id, email, name, address, number):
       if not check_email_format(email):
         return "The format of the email is not OK :)"
-      query_body = {
-       'query': {
-          'match':{
-            'username' : username
-          }
-        }
-      }
-      res = es.search(index='toobors-profile', body=query_body)
-      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      # query_body = {
+      #  'query': {
+      #     'match':{
+      #       'username' : username
+      #     }
+      #   }
+      # }
+      # res = es.search(index='toobors-profile', body=query_body)
+      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      # id = hash1[token]
       update_query_body = {
          "script" : {
               "source": "ctx._source.users.add(params.users)",
@@ -215,16 +228,17 @@ class Profile(object):
     
     # Edit the Users Information by use them email
     @cherrypy.expose
-    def edit_user(self, username, email, name, address, number):
-      query_body = {
-       'query': {
-          'match':{
-            'username' : username
-          }
-        }
-      }
-      res = es.search(index='toobors-profile', body=query_body)
-      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+    def edit_user(self, token, id, email, name, address, number):
+      # query_body = {
+      #  'query': {
+      #     'match':{
+      #       'username' : username
+      #     }
+      #   }
+      # }
+      # res = es.search(index='toobors-profile', body=query_body)
+      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      # id = hash1[token]
       remove_query_body = {
         "script": {
           "source":"""
@@ -250,16 +264,17 @@ class Profile(object):
     
     # Remove the user from the team by use them email
     @cherrypy.expose
-    def remove_user(self, username, email):
-      query_body = {
-       'query': {
-          'match':{
-            'username' : username
-          }
-        }
-      }
-      res = es.search(index='toobors-profile', body=query_body)
-      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+    def remove_user(self, token, id, email):
+      # query_body = {
+      #  'query': {
+      #     'match':{
+      #       'username' : username
+      #     }
+      #   }
+      # }
+      # res = es.search(index='toobors-profile', body=query_body)
+      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      # id = hash1[token]
       remove_query_body = {
         "script": {
           "source": """
@@ -276,21 +291,28 @@ class Profile(object):
         }
       }
       result = es.update(index='toobors-profile', id=id, body=remove_query_body)
-      print(result)
-      print(id)
+      # print(result)
+      # print(id)
       return 'the user removed from team'
     
     # set the scores from the portfolio
     # we need to use the rabbitmq to messaged to the portfolio
     @cherrypy.expose
-    def set_scores(self, id):
+    def set_scores(self, token, id):
       return 'the score seted'
 
     
     # add to followers 
     @cherrypy.expose
-    def follow(self, username, following_id):
+    def follow(self, token, id, following_id):
       return 'the user followed by you'
+
 if __name__ == '__main__':
+  # elasticsearch coonection 
   es = Elasticsearch("http://192.168.231.73:9200/")
+  
+  # radis connection
+  rd = Walrus(host="localhost", port=6379, db=0)
+  hash1 = rd.Hash('Teams')
+
   cherrypy.quickstart(Profile())
