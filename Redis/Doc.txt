@@ -22,10 +22,10 @@
 		at first we can use it on docker by dis command
 			docker run --name redis -p 6379:6379 redis
 		and by this we run the server of the redis
-		
+	   Basic commands:	
 		we can have the cli of the redis for use to set key value
 			SET key value
-		for get the value of the key
+		for get the value of the key(just for strings)
 			GET key
 		for delete the key
 			DEL key
@@ -35,3 +35,32 @@
 			KEYS *
 		for emptey the redis memory 
 			flushall
+		for check time to leave (expire)
+			ttl name
+		for set expire time
+			expire name time
+			SET name value EX time (or SETEX name value time)
+		for set list value
+			LPUSH listName value (L in PUSH say push it to first of list, R for end)
+		to get list
+			LRANG name from-index to-index	
+		and have the pop index
+			LPOP KEY count
+
+		for set sets
+			SADD key member
+		for get sets memebr
+			SMEMBER key
+		for remove 
+			SREM key member
+		
+		for use hashes
+			HSET key field value 
+		for get the value 
+			HGET key field
+		for get all
+			GETALL key
+		and for delete
+			HDEL key field
+		delete all
+			HDELALL key
