@@ -129,6 +129,16 @@ class Profile(object):
       es.index(index='toobors-profile', document=insert_query_body)
       return f'Congregation your account is make, you can login by {username} username'
 
+    # Logout
+    @cherrypy.expose
+    def logout(self, username):
+      return 'you are loged out'
+
+    # change password
+    @cherrypy.expose
+    def change_password(self, username, password, new_password):
+      return 'your password was changed'
+    
     # activate the team by useing the username
     @cherrypy.expose
     def switch_on_team(self, username):
@@ -269,7 +279,18 @@ class Profile(object):
       print(result)
       print(id)
       return 'the user removed from team'
-      
+    
+    # set the scores from the portfolio
+    # we need to use the rabbitmq to messaged to the portfolio
+    @cherrypy.expose
+    def set_scores(self, id):
+      return 'the score seted'
+
+    
+    # add to followers 
+    @cherrypy.expose
+    def follow(self, username, following_id):
+      return 'the user followed by you'
 if __name__ == '__main__':
   es = Elasticsearch("http://192.168.231.73:9200/")
   cherrypy.quickstart(Profile())

@@ -1,11 +1,11 @@
 from asyncio.windows_events import NULL
 from elasticsearch import Elasticsearch
+
+# connect to the database
 es = Elasticsearch("http://192.168.231.73:9200/")
 
-# es.search()
-# es.index()
-# es.update()
 
+# request body for set the database 
 request_body = {
     "settings" : {
         "number_of_shards": 1,
@@ -42,9 +42,12 @@ request_body = {
         }
     }
 }
+
+# create the database index for profile 
 print("creating 'tooBors-profile' index...")
 es.indices.create(index = 'toobors-profile', mappings= request_body['mappings'], settings=request_body["settings"])
 
+# make the first index for test
 es.index(index='toobors-profile', document={
   "username": "mgh27",
   "email": "mgh27@aut.ac.ir",
