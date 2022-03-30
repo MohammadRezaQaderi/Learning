@@ -1,0 +1,37 @@
+-- remote dictionary server (it is a in memory database us as a cash that improve the performanfe the databases)
+	multiModel database
+
+	we have the redis core that store the key values data and extend it by redis modules
+	
+	
+	data persistent
+		the first way that we can have replica(but is not safe)
+		the safe ways{
+			snapshoting(RDB) -> by event time or ...
+			Appand only file -> the file for each log
+
+
+
+	scale the redis
+		clustering (replica with one master can read and write and slave just read)
+		sharding (distributed in may server)
+
+
+
+	work with redis is easy 
+		at first we can use it on docker by dis command
+			docker run --name redis -p 6379:6379 redis
+		and by this we run the server of the redis
+		
+		we can have the cli of the redis for use to set key value
+			SET key value
+		for get the value of the key
+			GET key
+		for delete the key
+			DEL key
+		for check existing key
+			EXISTS key
+		for check all key that existed
+			KEYS *
+		for emptey the redis memory 
+			flushall
