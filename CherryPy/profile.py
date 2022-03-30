@@ -7,6 +7,7 @@ import uuid
 
 # The Defualt Value for DataBase
 defualt_schema = {
+  "amount": 10000000,
   "image": "",
   "isPublic": True,
   "isActivate": True,
@@ -65,10 +66,6 @@ def password_format_check(passwd):
         return val,''
     else:
       return val, message
-def set_token_redis(member_id, rd):
-  return
-def get_token_redis(member_id):
-  return
 
 # Class of Profiles that Can Authentication and Dashboard API and coonect to DB
 class Profile(object):
@@ -125,6 +122,7 @@ class Profile(object):
         "username": username,
         "email": email,
         "password": encode_password,
+        "amount": defualt_schema['amount'],
         "image": defualt_schema['image'],
         "isPublic": defualt_schema['isPublic'],
         "isActivate": defualt_schema['isActivate'],
@@ -152,16 +150,6 @@ class Profile(object):
     # activate the team by useing the username
     @cherrypy.expose
     def switch_on_team(self, token):
-      # query_body = {
-      #  'query': {
-      #     'match':{
-      #       'username' : username
-      #     }
-      #   }
-      # }
-      # res = es.search(index='toobors-profile', body=query_body)
-      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
-      # id = hash1[token]
       active_query_body = {
          "script" : {
               "source": "ctx._source.isActivate = params.isActivate",
@@ -177,16 +165,6 @@ class Profile(object):
     #  deactivate team by using the username
     @cherrypy.expose
     def switch_off_team(self, token, id):
-      # query_body = {
-      #  'query': {
-      #     'match':{
-      #       'username' : username
-      #     }
-      #   }
-      # }
-      # res = es.search(index='toobors-profile', body=query_body)
-      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
-      # id = hash1[token]
       deactive_query_body = {
          "script" : {
               "source": "ctx._source.isActivate = params.isActivate",
@@ -204,16 +182,6 @@ class Profile(object):
     def add_user(self, token, id, email, name, address, number):
       if not check_email_format(email):
         return "The format of the email is not OK :)"
-      # query_body = {
-      #  'query': {
-      #     'match':{
-      #       'username' : username
-      #     }
-      #   }
-      # }
-      # res = es.search(index='toobors-profile', body=query_body)
-      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
-      # id = hash1[token]
       update_query_body = {
          "script" : {
               "source": "ctx._source.users.add(params.users)",
@@ -229,16 +197,6 @@ class Profile(object):
     # Edit the Users Information by use them email
     @cherrypy.expose
     def edit_user(self, token, id, email, name, address, number):
-      # query_body = {
-      #  'query': {
-      #     'match':{
-      #       'username' : username
-      #     }
-      #   }
-      # }
-      # res = es.search(index='toobors-profile', body=query_body)
-      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
-      # id = hash1[token]
       remove_query_body = {
         "script": {
           "source":"""
@@ -265,16 +223,6 @@ class Profile(object):
     # Remove the user from the team by use them email
     @cherrypy.expose
     def remove_user(self, token, id, email):
-      # query_body = {
-      #  'query': {
-      #     'match':{
-      #       'username' : username
-      #     }
-      #   }
-      # }
-      # res = es.search(index='toobors-profile', body=query_body)
-      # id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
-      # id = hash1[token]
       remove_query_body = {
         "script": {
           "source": """
@@ -291,8 +239,6 @@ class Profile(object):
         }
       }
       result = es.update(index='toobors-profile', id=id, body=remove_query_body)
-      # print(result)
-      # print(id)
       return 'the user removed from team'
     
     # set the scores from the portfolio
