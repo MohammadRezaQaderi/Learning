@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 from elasticsearch import Elasticsearch
 from datetime import datetime
 # connect to the database
@@ -18,6 +17,7 @@ request_body = {
             'symbol': {'type': 'text'},
             'volume': {'type': 'double'},
             'price': {'type': 'double'},
+            'buyed': {'type': 'boolean'},
             'buy_time': {'type':   'date',
                             'format': 'yyyy-MM-dd HH:mm:ss'}
         } 
@@ -35,5 +35,6 @@ es.index(index='toobors-orders', document={
   'symbol': '',
   'volume': 150,
   'price': 1000,
+  'buyed': True,
   'buy_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 })
