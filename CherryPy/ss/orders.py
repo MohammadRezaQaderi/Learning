@@ -1,7 +1,7 @@
+import json
 from elasticsearch import Elasticsearch
 import cherrypy
 from datetime import datetime
-import datetime as dt
 import pandas as pd
 import pika
 from pika.exchange_type import ExchangeType
@@ -16,12 +16,13 @@ def check_time_for_trading():
     if  datetime.now().strftime("%H:%M:%S") > START_TIME and datetime.now().strftime("%H:%M:%S") < END_TIME:
         return True
     else: return False  
-def amount_rabbitmq(amount):
+
+def amount_rabbitmq(message):
     connection_parameters = pika.ConnectionParameters('localhost')
     connection = pika.BlockingConnection(connection_parameters)
     channel = connection.channel()
     channel.exchange_declare(exchange='amount-update', exchange_type=ExchangeType.fanout)
-    channel.basic_publish(exchange='amount-update', routing_key='', body=amount)
+    channel.basic_publish(exchange='amount-update', routing_key='', body=message)
     connection.close()
 
 
@@ -56,7 +57,12 @@ class Orders(object):
                 es.index(index='toobors-orders', document=insert_query_body)
 
                 # TODO here we should send the message to profile and portfolio to update the amount
-                amount_rabbitmq(amount=amount)
+                data = {
+                    'user_id': user_id,
+                    'amount': amount,
+                }
+                message = json.dumps(data)
+                amount_rabbitmq(message=message)
                 return "your order was added"
             else:
                 return "your sallery is not enough for by this volum of this symbol"
@@ -91,7 +97,12 @@ class Orders(object):
                 }
             es.index(index='toobors-orders', document=insert_query_body)
             # TODO we should say new amount to profile and portfolio
-            amount_rabbitmq(amount=amount)
+            data = {
+                'user_id': user_id,
+                'amount': amount,
+            }
+            message = json.dump(data)
+            amount_rabbitmq(amount=message)
             return "selled out"
         else:
             return "the time is out of range to can trading"

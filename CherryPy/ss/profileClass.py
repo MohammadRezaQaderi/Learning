@@ -1,0 +1,248 @@
+import base64
+import pandas as pd
+from elasticsearch import Elasticsearch
+from walrus import *
+import uuid
+
+# The Defualt Value for DataBase
+defualt_schema = {
+  "amount": 10000000,
+  "image": "",
+  "isPublic": True,
+  "isActivate": True,
+  "users":[],
+  "follower":[],
+  "scores":{
+        "Ret": 0,
+        "Vol": 0,
+        "Rank": 1
+      }
+}
+
+regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+
+# check the right format for the email
+def check_email_format(email):
+    # pass the regular expression
+    # and the string into the fullmatch() method
+    if(re.fullmatch(regex, email)):
+        return True
+    else:
+        False
+ 
+ 
+
+# Check the password format is be standards
+def password_format_check(passwd):
+      
+    SpecialSym =['$', '@', '#', '%']
+    val = True
+    message = ''
+    if len(passwd) < 6:
+        message = 'length should be at least 6'
+        val = False
+          
+    if len(passwd) > 20:
+        message = 'length should be not be greater than 8'
+        val = False
+          
+    if not any(char.isdigit() for char in passwd):
+        message = 'Password should have at least one numeral'
+        val = False
+          
+    if not any(char.isupper() for char in passwd):
+        message = 'Password should have at least one uppercase letter'
+        val = False
+          
+    if not any(char.islower() for char in passwd):
+        message = 'Password should have at least one lowercase letter'
+        val = False
+          
+    if not any(char in SpecialSym for char in passwd):
+        message = 'Password should have at least one of the symbols $@#'
+        val = False
+    if val:
+        return val,''
+    else:
+      return val, message
+
+# Class of Profiles that Can Authentication and Dashboard API and coonect to DB
+class Profile(object):
+    
+    # DashBoards
+    def profile(self):
+      return "Hello here we have the dashbords"
+    
+    # login for user with username and password
+    def login(self, username, password):
+      encode_password = (base64.b64encode(password.encode('utf-8'))).decode('utf-8')
+      query_body = {
+       'query': {
+          'match':{
+            'username' : username
+          }
+        }
+      }
+      res = es.search(index='toobors-profile', body=query_body)  
+      db_password = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]), axis=1)['_source']['password']
+      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      if db_password == encode_password:
+        token = uuid.uuid4().hex
+        hash1[token] = id
+        return f'You are Loged in {username} with id {id} and token of {token} '
+      else:
+        return f'Excuse me its not correct Password for {username}'
+
+    # Signup make the team account by choose uniqe username and email with passwords 
+    def signup(self, username, email, password, re_password):
+      # check not existed username and the format of email and passwords
+      exist_query_body = {
+       'query': {
+          'match':{
+            'username' : username
+          }
+        }
+      }
+      if password != re_password:
+        return f"your entered password are not match"
+      val , messages = password_format_check(password)
+      if not val:
+        return messages
+      if not check_email_format(email):
+        return "The format of the email is not OK :)"
+      res = es.search(index='toobors-profile', body=exist_query_body)
+      if len(res["hits"]["hits"]) != 0:
+        return f"the {username} is exists, please choose another one"
+      encode_password = (base64.b64encode(password.encode('utf-8'))).decode('utf-8')
+      insert_query_body = {
+        "username": username,
+        "email": email,
+        "password": encode_password,
+        "amount": defualt_schema['amount'],
+        "image": defualt_schema['image'],
+        "isPublic": defualt_schema['isPublic'],
+        "isActivate": defualt_schema['isActivate'],
+        "users":defualt_schema['users'],
+        "follower":defualt_schema['follower'],
+        "scores": defualt_schema['scores']
+      }
+      es.index(index='toobors-profile', document=insert_query_body)
+      id = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_id']['username']
+      token = uuid.uuid4().hex
+      hash1[token] = id
+      return f'Congregation your account is make, you can login by {username} username with id of {id} and token of {token}'
+
+    # Logout
+    def logout(self, token, id):
+      del hash1[token]
+      return 'you are loged out'
+
+    # change password
+    def change_password(self, token, id, new_password):
+      return 'your password was changed'
+    
+    # activate the team by useing the username
+    def switch_on_team(self, token, id):
+      active_query_body = {
+         "script" : {
+              "source": "ctx._source.isActivate = params.isActivate",
+              "lang": "painless",
+              "params" : {
+                "isActivate": True
+              }
+        }
+      }
+      result = es.update(index='toobors-profile', id=id, body=active_query_body) 
+      return f"the team is Activated {id}"
+
+    #  deactivate team by using the username
+    def switch_off_team(self, token, id):
+      deactive_query_body = {
+         "script" : {
+              "source": "ctx._source.isActivate = params.isActivate",
+              "lang": "painless",
+              "params" : {
+                "isActivate": False
+              }
+        }
+      }
+      result = es.update(index='toobors-profile', id=id, body=deactive_query_body) 
+      return f"the team is Deactivate {id}"
+
+    # Add the Users To Teams by get the username and set the email, name, address and number
+    def add_user(self, token, id, email, name, address, number):
+      if not check_email_format(email):
+        return "The format of the email is not OK :)"
+      update_query_body = {
+         "script" : {
+              "source": "ctx._source.users.add(params.users)",
+              "lang": "painless",
+              "params" : {
+                "users":{'email': email, 'name': name, 'address': address, 'number': number}
+              }
+        }
+      }
+      result = es.update(index='toobors-profile', id=id, body=update_query_body) 
+      return f"the users added : {name}"
+    
+    # Edit the Users Information by use them email
+    def edit_user(self, token, id, email, name, address, number):
+      remove_query_body = {
+        "script": {
+          "source":"""
+            for(int i = 0;i < ctx._source.users.length; i++) {
+              if (ctx._source.users[i]['email'] == params.email ){
+                ctx._source.users[i]['name'] = params.name;
+                ctx._source.users[i]['address'] = params.address;
+                ctx._source.users[i]['number'] = params.number;
+              }
+            }
+       """,
+          "lang": "painless",
+          "params": {
+            "email": email,
+            "name": name,
+            "address": address,
+            "number": number
+          }
+        }
+      }
+      result = es.update(index='toobors-profile', id=id, body=remove_query_body)
+      return 'the user removed from team'
+    
+    # Remove the user from the team by use them email
+    def remove_user(self, token, id, email):
+      remove_query_body = {
+        "script": {
+          "source": """
+            for(int i = 0;i < ctx._source.users.length; i++) {
+              if (ctx._source.users[i]['email'] == params.email ){
+                ctx._source.users.remove(i);
+              }
+            }
+       """,
+          "lang": "painless",
+          "params": {
+            "email": email
+          }
+        }
+      }
+      result = es.update(index='toobors-profile', id=id, body=remove_query_body)
+      return 'the user removed from team'
+    
+    # set the scores from the portfolio
+    # we need to use the rabbitmq to messaged to the portfolio
+    def set_scores(self, token, id):
+      return 'the score seted'
+
+    
+    # add to followers 
+    def follow(self, token, id, following_id):
+      return 'the user followed by you'
+
+# elasticsearch coonection 
+es = Elasticsearch("http://192.168.231.73:9200/")
+
+# radis connection
+rd = Database(host="localhost", port=6379, db=0)
+hash1 = rd.Hash('Teams')

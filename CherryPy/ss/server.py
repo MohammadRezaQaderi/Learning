@@ -1,9 +1,18 @@
-import base64
-import pandas as pd
 from elasticsearch import Elasticsearch
 import cherrypy
+from pika.exchange_type import ExchangeType
+import pika
+import json
+from datetime import datetime
+import pandas as pd
 from walrus import *
 import uuid
+import base64
+
+
+START_TIME = '08:00:00'
+END_TIME = '18:10:00'
+NOW_PRICE = 100
 
 # The Defualt Value for DataBase
 defualt_schema = {
@@ -67,10 +76,102 @@ def password_format_check(passwd):
     else:
       return val, message
 
-# Class of Profiles that Can Authentication and Dashboard API and coonect to DB
-class Profile(object):
+
+# check that in time for trades
+def check_time_for_trading():
+    date_now = datetime.now().strftime("%H:%M:%S")
+    if  date_now > START_TIME and date_now < END_TIME:
+        return True
+    else: return False  
+
+def amount_rabbitmq(message):
+    connection_parameters = pika.ConnectionParameters('localhost')
+    connection = pika.BlockingConnection(connection_parameters)
+    channel = connection.channel()
+    channel.exchange_declare(exchange='amount-update', exchange_type=ExchangeType.fanout)
+    channel.basic_publish(exchange='amount-update', routing_key='', body=message)
+    connection.close()
+
+# the orders class that handle users orders
+class Server(object):
+        # this call when the user buy symbol
+    @cherrypy.expose
+    def buy_symbol(self, user_id, symbol, volume, price):
+        if check_time_for_trading():
+            buy_cost = int(volume) * int(price)
+            exist_query_body = {
+                'query': {
+                    'match':{
+                        'user_id' : user_id
+                    }
+                }
+            }
+            res = es.search(index='toobors-orders', body=exist_query_body)
+            amount = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_source']['amount']
+            if amount >= buy_cost :
+                amount -= buy_cost 
+                insert_query_body = {
+                    "user_id": user_id,
+                    "amount": amount,
+                    'symbol': symbol,
+                    'volume': volume,
+                    'price': price,
+                    'buyed': True,
+                    'buy_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                es.index(index='toobors-orders', document=insert_query_body)
+
+                # TODO here we should send the message to profile and portfolio to update the amount
+                data = {
+                    'user_id': user_id,
+                    'amount': amount,
+                }
+                message = json.dumps(data)
+                amount_rabbitmq(message=message)
+                return "your order was added"
+            else:
+                return "your sallery is not enough for by this volum of this symbol"
+        else:
+            return "the time is out of range to can trading"
     
-    # DashBoards
+    # this call when the users want to sell a symbol
+    @cherrypy.expose
+    def sell_symbol(self , id, user_id):
+        if check_time_for_trading():
+            exist_query_body = {
+                'query': {
+                    'match':{
+                        '_id' : id
+                    }
+                }
+            }
+            res = es.search(index='toobors-orders', body=exist_query_body)
+            amount = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_source']['amount']
+            volume = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_source']['volume']
+            symbol = pd.concat(map(pd.DataFrame.from_dict, res["hits"]["hits"]))['_source']['symbol']
+            sell_come = int(volume) * NOW_PRICE
+            amount += sell_come
+            insert_query_body = {
+                    "user_id": user_id,
+                    "amount": amount,
+                    'symbol': symbol,
+                    'volume': volume,
+                    'price': NOW_PRICE,
+                    'buyed': False,
+                    'buy_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+            es.index(index='toobors-orders', document=insert_query_body)
+            # TODO we should say new amount to profile and portfolio
+            data = {
+                'user_id': user_id,
+                'amount': amount,
+            }
+            message = json.dump(data)
+            amount_rabbitmq(amount=message)
+            return "selled out"
+        else:
+            return "the time is out of range to can trading"
+        # DashBoards
     @cherrypy.expose
     def profile(self):
       return "Hello here we have the dashbords"
@@ -92,7 +193,7 @@ class Profile(object):
       if db_password == encode_password:
         token = uuid.uuid4().hex
         hash1[token] = id
-        return f'You are Loged in {username} with id {id} and token of {token}'
+        return f'You are Loged in {username} with id {id} and token of {token} '
       else:
         return f'Excuse me its not correct Password for {username}'
 
@@ -149,7 +250,7 @@ class Profile(object):
     
     # activate the team by useing the username
     @cherrypy.expose
-    def switch_on_team(self, token):
+    def switch_on_team(self, token, id):
       active_query_body = {
          "script" : {
               "source": "ctx._source.isActivate = params.isActivate",
@@ -253,12 +354,23 @@ class Profile(object):
     def follow(self, token, id, following_id):
       return 'the user followed by you'
 
-if __name__ == '__main__':
-  # elasticsearch coonection 
-  es = Elasticsearch("http://192.168.231.73:9200/")
-  
-  # radis connection
-  rd = Walrus(host="localhost", port=6379, db=0)
-  hash1 = rd.Hash('Teams')
+    @cherrypy.expose
+    def LD(self, InstrumentID):
+        x = rd1.hgetall(InstrumentID)
+        print(x)
+        x = { y.decode('UTF-8'): x.get(y).decode('UTF-8') for y in x.keys() }
+        data = json.dumps(x)
+        return data
 
-  cherrypy.quickstart(Profile())
+
+if __name__ == '__main__':
+    # elasticsearch coonection 
+    es = Elasticsearch("http://192.168.231.73:9200/")
+    connection_parameters = pika.ConnectionParameters('localhost')
+    connection = pika.BlockingConnection(connection_parameters)
+    channel = connection.channel()
+    rd = Database(host="localhost", port=6379, db=0)
+    hash1 = rd.Hash('Teams')
+    # radis connection
+    rd1 = Database(host="192.168.231.20", port=6379, db=7)
+    cherrypy.quickstart(Server())

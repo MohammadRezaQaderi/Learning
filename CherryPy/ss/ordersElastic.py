@@ -19,7 +19,7 @@ request_body = {
             'price': {'type': 'double'},
             'buyed': {'type': 'boolean'},
             'buy_time': {'type':   'date',
-                            'format': 'yyyy-MM-dd HH:mm:ss'}
+                        'format': 'yyyy-MM-dd HH:mm:ss'}
         } 
     }
 }
@@ -30,7 +30,7 @@ es.indices.create(index = 'toobors-orders', mappings= request_body['mappings'], 
 
 # make the first index for test
 es.index(index='toobors-orders', document={
-  "user_id": "mgh27",
+  "user_id": "SS1f7n8BOq_1BB0R9j0H",
   "amount": 10000000,
   'symbol': '',
   'volume': 150,
